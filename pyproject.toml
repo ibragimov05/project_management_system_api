@@ -1,0 +1,57 @@
+[tool.ruff]
+# Enable rules for linting
+lint.ignore = [
+  # "D100",
+  # "D104",
+  'D101',
+] # Ignore specific rules (e.g., docstring-related)lint.select = ["E", "F", "W", "I", "UP", "C90", "N", "D", "PL", "T20", "SIM"]
+
+# Set maximum line length
+line-length = 120
+
+# Auto-fix issues when running Ruff
+fix = true
+unsafe-fixes = false
+
+# Exclude some directories from checking
+exclude = [".git", "__pycache__", "migrations", "venv", "env", ".venv"]
+
+# Target Python version
+target-version = "py311"
+
+[tool.ruff.format]
+# Enable Ruff's formatter
+quote-style = "double"        # Use double quotes for strings
+indent-style = "space"        # Use spaces instead of tabs
+line-ending = "lf"            # Use LF for line endings
+docstring-code-format = false # Format code snippets in docstrings
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore specific rules per file
+"tests/*" = ["D", "S101"] # Ignore docstrings and assert warnings in tests
+"__init__.py" = ["F401"]  # Ignore "imported but unused" in __init__.py
+
+[tool.ruff.lint.isort]
+# Configure import sorting (similar to isort)
+known-first-party = ["app"]
+combine-as-imports = true
+lines-between-types = 1
+section-order = [
+  "future",
+  "standard-library",
+  "third-party",
+  "first-party",
+  "local-folder",
+]
+
+[tool.ruff.lint.pydocstyle]
+# Set docstring style
+convention = "google" # Options: "google", "numpy", "pep257"
+
+[tool.ruff.lint.flake8-quotes]
+# Ensure consistency in string quotes
+inline-quotes = "double"
+
+[tool.ruff.lint.pep8-naming]
+# Enforce naming conventions
+ignore-names = ["_"] # Allow underscore as a variable name
