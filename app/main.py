@@ -5,6 +5,8 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
+from app.api.routes.auth_api import router as auth_router
+
 app = FastAPI(title="Project management system API", docs_url=None, redoc_url=None)
 
 
@@ -12,6 +14,8 @@ app = FastAPI(title="Project management system API", docs_url=None, redoc_url=No
 def health_check() -> dict[str, str]:
     return {"status": "HEALTHY"}
 
+
+app.include_router(auth_router)
 
 SECURITY = HTTPBasic()
 
