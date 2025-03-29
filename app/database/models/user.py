@@ -1,7 +1,6 @@
 import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
-from sqlalchemy.orm import relationship
 
 from app.database.base import Base
 
@@ -26,5 +25,5 @@ class User(Base):
         default=lambda: datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
     )
 
-    # Relationship
-    shops = relationship("Shop", back_populates="user", cascade="all, delete")
+    # # Relationship
+    # shops = relationship("Shop", back_populates="user", cascade="all, delete")
