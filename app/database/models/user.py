@@ -2,6 +2,7 @@ import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
 
+from app.core.enums.role_enum import RoleEnum
 from app.database.base import Base
 
 
@@ -12,9 +13,8 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     username = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    telegram_chat_id = Column(String(255), nullable=True)
+    role = Column(String(255), nullable=False, default=RoleEnum.TEAM_MEMBER)
     is_active = Column(Boolean, default=True)
-    super_admin = Column(Boolean, default=False)
 
     created_at = Column(
         DateTime,
