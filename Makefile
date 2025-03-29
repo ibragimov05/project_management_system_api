@@ -6,3 +6,9 @@ check:
 
 format:
 	@ruff format app
+
+up:
+	@docker compose up --watch
+
+down:
+	@docker compose down
