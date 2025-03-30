@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, Enum
 from sqlalchemy.orm import relationship
 
-from app.core.enums.task_priority import TaskPriority
+from app.core.enums.task_priority_enum import TaskPriority
 from app.core.enums.task_status_enum import TaskStatus
 from app.database.base import Base
 

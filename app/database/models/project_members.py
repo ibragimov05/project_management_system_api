@@ -1,6 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, Enum
 
-from app.core.enums.role_enum import UserRole
+from app.core.enums.user_role_enum import UserRole
 from app.database.base import Base
 
 

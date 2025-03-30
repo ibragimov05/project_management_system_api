@@ -1,10 +1,12 @@
+from app.core.utils.constants import ADMIN_PASSWORD, ADMIN_USERNAME
+
+
 from typing import Any
 
 from fastapi import Response
 from starlette_admin.auth import AuthProvider
 from starlette_admin.exceptions import LoginFailed
 
-from app.core.utils.constants import ADMIN_PASSWORD, ADMIN_USERNAME
 
 
 class StarletteAuthProvider(AuthProvider):

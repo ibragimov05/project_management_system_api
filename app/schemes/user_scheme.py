@@ -2,12 +2,15 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.core.enums.user_role_enum import UserRole
+
 
 class UserScheme(BaseModel):
     username: str = Field(min_length=5, max_length=99, description="username")
     email: EmailStr = Field(..., description="user email")
-    password: str = Field(..., description="user password")
-    telegram_chat_id: Optional[str] = Field(None, description="user's telegram chat id")
+    password: str = Field(min_length=6, description="user password")
+    full_name: str = Field(min_length=4, description="user's full name")
+    role: UserRole = Field(..., description="user's role")
 
 
 class CreateUserScheme(UserScheme):
