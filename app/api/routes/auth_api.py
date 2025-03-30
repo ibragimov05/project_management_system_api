@@ -12,7 +12,7 @@ from app.schemes.token_scheme import TokenResponseScheme
 from app.schemes.user_scheme import CreateUserScheme, UserResponseSchema
 from app.services.auth_service import AUTH_SERVICE_DEPENDENCY
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 

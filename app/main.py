@@ -1,16 +1,19 @@
-from secrets import compare_digest
-
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
-from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi import APIRouter, FastAPI
+from starlette.middleware.sessions import SessionMiddleware
 from starlette_admin.contrib.sqla import Admin, ModelView
 
 from app.api.routes.auth_api import router as auth_router
+from app.api.routes.core_api import router as core_router
+from app.core.utils.constants import PROJECT_MANAGEMENT_SYSTEM_API, SESSION_SECRET_KEY
+from app.core.utils.starlette_auth_provider import StarletteAuthProvider
 from app.database.base import Base, engine
-from app.database.models import User
+from app.database.models.comments import Comment
+from app.database.models.project_members import ProjectMember
+from app.database.models.projects import Project
+from app.database.models.tasks import Task
+from app.database.models.users import User
 
-app = FastAPI(title="Project management system API", docs_url=None, redoc_url=None)
+app = FastAPI(title=PROJECT_MANAGEMENT_SYSTEM_API, docs_url=None, redoc_url=None)
 
 
 @app.get("/")
@@ -21,53 +24,25 @@ def health_check() -> dict[str, str]:
 Base.metadata.create_all(bind=engine)
 
 
-SECURITY = HTTPBasic()
-
-
-def _verify_credentials(credentials: HTTPBasicCredentials = Depends(SECURITY)) -> str:
-    username: str = "admin"
-    password: str = "Admin"
-
-    is_username_correct: bool = compare_digest(credentials.username, username)
-    is_password_correct: bool = compare_digest(credentials.password, password)
-
-    if not (is_username_correct and is_password_correct):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-
-    return credentials.username
-
-
-@app.get("/docs", include_in_schema=False)
-def custom_swagger_ui(username: str = Depends(_verify_credentials)) -> HTMLResponse:
-    return get_swagger_ui_html(openapi_url="/openapi.json", title="Secure Swagger Ui")
-
-
-@app.get("/openapi.json", include_in_schema=False)
-def get_open_api_scheme(username: str = Depends(_verify_credentials)) -> JSONResponse:
-    return JSONResponse(app.openapi())
-
-
 def _init_routes() -> None:
-    all_routes: list[APIRouter] = [auth_router]
+    all_routes: list[APIRouter] = [auth_router, core_router]
 
     for route in all_routes:
         app.include_router(route)
 
 
 def _init_starlette() -> None:
-    admin = Admin(engine=engine, title="Project management system API")
+    admin = Admin(engine=engine, title=PROJECT_MANAGEMENT_SYSTEM_API, auth_provider=StarletteAuthProvider())
 
     admin.mount_to(app)
 
-    all_db_models: list[any] = [User]
+    all_db_models: list[any] = [User, Comment, ProjectMember, Project, Task]
 
     for model in all_db_models:
         admin.add_view(ModelView(model))
 
+
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 
 _init_routes()
 _init_starlette()
