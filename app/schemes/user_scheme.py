@@ -10,7 +10,7 @@ class UserScheme(BaseModel):
     email: EmailStr = Field(..., description="user email")
     password: str = Field(min_length=6, description="user password")
     full_name: str = Field(min_length=4, description="user's full name")
-    role: UserRole = Field(..., description="user's role", default=UserRole.TEAM_MEMBER)
+    role: UserRole = Field(description="user's role", default=UserRole.TEAM_MEMBER)
 
 
 class CreateUserScheme(UserScheme):
