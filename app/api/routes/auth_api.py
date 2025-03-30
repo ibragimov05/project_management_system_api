@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 from app.core.dependencies.database import DB_DEPENDENCY
 from app.core.utils.abstract_response import BaseResponse
 from app.core.utils.helpers import Helpers
-from app.database.models.user import User
+from app.database.models.users import User
 from app.schemes.token_scheme import TokenResponseScheme
 from app.schemes.user_scheme import CreateUserScheme, UserResponseSchema
 from app.services.auth_service import AUTH_SERVICE_DEPENDENCY

@@ -8,7 +8,7 @@ from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-from app.database.models.user import User
+from app.database.models.users import User
 
 
 class UserModel(BaseModel):
