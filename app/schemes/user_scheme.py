@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel, EmailStr, Field
 
 from app.core.enums.user_role_enum import UserRole
@@ -21,9 +19,9 @@ class UserResponseSchema(BaseModel):
     id: int
     username: str
     email: EmailStr
-    telegram_chat_id: Optional[str]
     is_active: bool
-    is_super_admin: bool = False
+    full_name: str
+    role: UserRole
 
     class Config:
         from_attributes = True

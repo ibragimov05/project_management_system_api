@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
 
 from app.core.dependencies.database import DB_DEPENDENCY
 from app.core.utils.abstract_response import BaseResponse
@@ -23,16 +22,14 @@ async def login(
     authservice: AUTH_SERVICE_DEPENDENCY,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> BaseResponse[dict]:
-    user: User | None = (
-        db.query(User).options(joinedload(User.shops)).filter(User.username == form_data.username).first()
-    )
+    user: User | None = db.query(User).filter(User.username == form_data.username).first()
 
     # user not found
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     # password is incorrect
-    if not authservice.verify_password(form_data.password, user.password_hash):
+    if not authservice.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
 
     # user's account is not active
@@ -63,16 +60,14 @@ async def get_token(
     authservice: AUTH_SERVICE_DEPENDENCY,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> TokenResponseScheme:
-    user: User | None = (
-        db.query(User).options(joinedload(User.shops)).filter(User.username == form_data.username).first()
-    )
+    user: User | None = db.query(User).filter(User.username == form_data.username).first()
 
     # user not found
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     # password is incorrect
-    if not authservice.verify_password(form_data.password, user.password_hash):
+    if not authservice.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
 
     # user's account is not active
@@ -97,6 +92,7 @@ async def sign_in(
     try:
         # Check if email already exists
         existing_user = db.query(User).filter(User.email == create_user_request.email).first()
+
         if existing_user:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
@@ -116,8 +112,9 @@ async def sign_in(
         create_user_model = User(
             username=create_user_request.username,
             email=create_user_request.email,
-            telegram_chat_id=create_user_request.telegram_chat_id,
-            password_hash=authservice.hash_password(create_user_request.password),
+            hashed_password=authservice.hash_password(create_user_request.password),
+            full_name=create_user_request.full_name,
+            role=create_user_request.role,
         )
 
         db.add(create_user_model)
@@ -167,10 +164,7 @@ async def refresh_token(
             message="token refreshed successfully",
             status="success",
             table="none",
-            data=TokenResponseScheme(
-                access_token=new_access_token,
-                refresh_token=new_refresh_token,
-            ),
+            data=TokenResponseScheme(access_token=new_access_token, refresh_token=new_refresh_token),
         )
 
     except JWTError as e:

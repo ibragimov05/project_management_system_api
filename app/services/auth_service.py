@@ -34,7 +34,7 @@ class AuthService:
             "sub": user.username,
             "id": user.id,
             "email": user.email,
-            "super_admin": user.super_admin,
+            "role": user.role,
             "refresh_token": refresh_token,
         }
 
