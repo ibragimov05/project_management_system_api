@@ -4,6 +4,7 @@ from starlette_admin.contrib.sqla import Admin, ModelView
 
 from app.api.routes.auth_api import router as auth_router
 from app.api.routes.core_api import router as core_router
+from app.api.routes.project_api import router as project_router
 from app.core.utils.constants import PROJECT_MANAGEMENT_SYSTEM_API, SESSION_SECRET_KEY
 from app.core.utils.starlette_auth_provider import StarletteAuthProvider
 from app.database.base import Base, engine
@@ -25,7 +26,7 @@ Base.metadata.create_all(bind=engine)
 
 
 def _init_routes() -> None:
-    all_routes: list[APIRouter] = [auth_router, core_router]
+    all_routes: list[APIRouter] = [auth_router, core_router, project_router]
 
     for route in all_routes:
         app.include_router(route)
