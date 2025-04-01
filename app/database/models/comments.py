@@ -16,7 +16,11 @@ class Comment(Base):
     task_id = Column(Integer, ForeignKey("tasks.id"), nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
-    updated_at = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(UTC).replace(tzinfo=None),
+        onupdate=lambda: datetime.now(UTC).replace(tzinfo=None),
+    )
 
     # relationships
     author = relationship("User", back_populates="comments")

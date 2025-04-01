@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Enum
+from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.core.enums.user_role_enum import UserRole
@@ -19,7 +19,11 @@ class User(Base):
     is_active = Column(Boolean, default=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
-    updated_at = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(UTC).replace(tzinfo=None),
+        onupdate=lambda: datetime.now(UTC).replace(tzinfo=None),
+    )
 
     # relationships
     projects = relationship("Project", secondary="project_members", back_populates="members")

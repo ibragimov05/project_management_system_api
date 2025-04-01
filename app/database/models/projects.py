@@ -16,12 +16,14 @@ class Project(Base):
     deadline = Column(DateTime, nullable=False)
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
-    updated_at = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(UTC).replace(tzinfo=None),
+        onupdate=lambda: datetime.now(UTC).replace(tzinfo=None),
+    )
 
-    members = relationship("User", secondary="project_members", back_populates="projects")
-
-    # TODO: why s is not being added??? WHAT THE HECK
     # relationships
+    members = relationship("User", secondary="project_members", back_populates="projects")
     tasks = relationship("Task", back_populates="project")
     comments = relationship("Comment", back_populates="project")
 
