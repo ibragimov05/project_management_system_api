@@ -17,6 +17,25 @@ from app.database.models.users import User
 app = FastAPI(title=PROJECT_MANAGEMENT_SYSTEM_API, docs_url=None, redoc_url=None)
 
 
+# @app.middleware("http")
+# async def telegram_logger(request: Request, call_next) -> Any | Response:
+#     # Log the incoming request
+#     request_info = f"Request: {request.method} {request.url}"
+
+#     telegram_bot_service = TelegramBotService()
+
+#     telegram_bot_service.send_telegram_message(request_info)
+
+#     # Process the request and get the response
+#     response: Response = await call_next(request)
+
+#     # Log the outgoing response
+#     response_info = f"Response: {response.status_code} for {request.url}"
+#     telegram_bot_service.send_telegram_message(response_info)
+
+#     return response
+
+
 @app.get("/")
 def health_check() -> dict[str, str]:
     return {"status": "HEALTHY"}
