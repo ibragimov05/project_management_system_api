@@ -8,6 +8,7 @@ from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
+from app.core.enums.user_role_enum import UserRole
 from app.database.models.users import User
 
 
@@ -15,7 +16,8 @@ class UserModel(BaseModel):
     id: int
     username: str
     email: str
-    super_admin: bool
+    role: UserRole
+    full_name: str
 
 
 class AuthService:
@@ -35,6 +37,7 @@ class AuthService:
             "id": user.id,
             "email": user.email,
             "role": user.role,
+            "full_name": user.full_name,
             "refresh_token": refresh_token,
         }
 
@@ -64,14 +67,15 @@ class AuthService:
             payload: dict[str, any] = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
 
             username: str = payload.get("sub")
+            user_id: int = payload.get("id")
             email: str = payload.get("email")
-            superadmin: bool = payload.get("super_admin", False)
-            user_id: bool = payload.get("id")
+            role: str = payload.get("role")
+            full_name: str = payload.get("full_name")
 
             if not username or not email or not user_id:
                 return "Invalid token."
 
-            return UserModel(email=email, id=user_id, super_admin=superadmin, username=username)
+            return UserModel(username=username, id=user_id, email=email, role=role, full_name=full_name)
         except ExpiredSignatureError:
             return "Token has expired"
         except JWTError:
@@ -82,4 +86,4 @@ def get_auth_service() -> AuthService:
     return AuthService()
 
 
-AUTH_SERVICE_DEPENDENCY = Annotated[AuthService, Depends(get_auth_service)]
+AUTHSERVICE_DEPENDENCY = Annotated[AuthService, Depends(get_auth_service)]

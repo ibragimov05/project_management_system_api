@@ -9,17 +9,17 @@ from app.core.utils.helpers import Helpers
 from app.database.models.users import User
 from app.schemes.token_scheme import TokenResponseScheme
 from app.schemes.user_scheme import CreateUserScheme, UserResponseSchema
-from app.services.auth_service import AUTH_SERVICE_DEPENDENCY
+from app.services.auth_service import AUTHSERVICE_DEPENDENCY
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/token")
 
 
 @router.post("/login", status_code=status.HTTP_200_OK, response_model=BaseResponse[dict])
 async def login(
     db: DB_DEPENDENCY,
-    authservice: AUTH_SERVICE_DEPENDENCY,
+    authservice: AUTHSERVICE_DEPENDENCY,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> BaseResponse[dict]:
     user: User | None = db.query(User).filter(User.username == form_data.username).first()
@@ -54,40 +54,11 @@ async def login(
     )
 
 
-@router.post("/token", response_model=TokenResponseScheme)
-async def get_token(
-    db: DB_DEPENDENCY,
-    authservice: AUTH_SERVICE_DEPENDENCY,
-    form_data: OAuth2PasswordRequestForm = Depends(),
-) -> TokenResponseScheme:
-    user: User | None = db.query(User).filter(User.username == form_data.username).first()
-
-    # user not found
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-
-    # password is incorrect
-    if not authservice.verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
-
-    # user's account is not active
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is inactive. Please contact support.",
-        )
-
-    access_token: str = authservice.create_token(user=user, refresh_token=False)
-    refresh_token: str = authservice.create_token(user=user, refresh_token=True)
-
-    return TokenResponseScheme(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
-
-
 @router.post("/sign_in", status_code=status.HTTP_201_CREATED, response_model=BaseResponse[UserResponseSchema])
 async def sign_in(
     db: DB_DEPENDENCY,
     create_user_request: CreateUserScheme,
-    authservice: AUTH_SERVICE_DEPENDENCY,
+    authservice: AUTHSERVICE_DEPENDENCY,
 ) -> BaseResponse[UserResponseSchema]:
     try:
         # Check if email already exists
@@ -140,7 +111,7 @@ async def sign_in(
 async def refresh_token(
     db: DB_DEPENDENCY,
     refresh_token: str,
-    authservice: AUTH_SERVICE_DEPENDENCY,
+    authservice: AUTHSERVICE_DEPENDENCY,
 ) -> BaseResponse[TokenResponseScheme]:
     try:
         payload: dict[str, any] = authservice.decode_token(refresh_token)

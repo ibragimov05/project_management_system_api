@@ -26,7 +26,7 @@ Base.metadata.create_all(bind=engine)
 
 
 def _init_routes() -> None:
-    all_routes: list[APIRouter] = [auth_router, core_router, project_router]
+    all_routes: list[APIRouter] = [core_router, auth_router, project_router]
 
     for route in all_routes:
         app.include_router(route)
