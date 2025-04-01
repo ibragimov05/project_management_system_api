@@ -58,7 +58,7 @@ async def custom_callback(request: Request, response: Response, pexpire: int) ->
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    redis_connection = redis.from_url("redis://localhost:6379/0", encoding="utf8")
+    redis_connection: redis.Redis = redis.from_url("redis://localhost:6379/0", encoding="utf8")
 
     await FastAPILimiter.init(
         redis=redis_connection,
