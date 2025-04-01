@@ -8,7 +8,6 @@ from starlette_admin.auth import AuthProvider
 from starlette_admin.exceptions import LoginFailed
 
 
-
 class StarletteAuthProvider(AuthProvider):
     async def login(self, username, password, remember_me, request, response) -> Response:
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:

@@ -22,36 +22,41 @@ async def login(
     authservice: AUTHSERVICE_DEPENDENCY,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> BaseResponse[dict]:
-    user: User | None = db.query(User).filter(User.username == form_data.username).first()
+    try:
+        user: User | None = db.query(User).filter(User.username == form_data.username).first()
 
-    # user not found
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        # user not found
+        if not user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
-    # password is incorrect
-    if not authservice.verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+        # password is incorrect
+        if not authservice.verify_password(form_data.password, user.hashed_password):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
 
-    # user's account is not active
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is inactive. Please contact support.",
+        # user's account is not active
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is inactive. Please contact support.",
+            )
+
+        access_token: str = authservice.create_token(user=user, refresh_token=False)
+        refresh_token: str = authservice.create_token(user=user, refresh_token=True)
+
+        return BaseResponse(
+            code=200,
+            table="users",
+            message="User logged in successfully",
+            status="success",
+            data={
+                "user": UserResponseSchema.model_validate(user),
+                "token": TokenResponseScheme(access_token=access_token, refresh_token=refresh_token),
+            },
         )
-
-    access_token: str = authservice.create_token(user=user, refresh_token=False)
-    refresh_token: str = authservice.create_token(user=user, refresh_token=True)
-
-    return BaseResponse(
-        code=200,
-        table="users",
-        message="User logged in successfully",
-        status="success",
-        data={
-            "user": UserResponseSchema.model_validate(user),
-            "token": TokenResponseScheme(access_token=access_token, refresh_token=refresh_token),
-        },
-    )
+    except HTTPException as http_exception:
+        raise http_exception
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.post("/sign_in", status_code=status.HTTP_201_CREATED, response_model=BaseResponse[UserResponseSchema])
@@ -99,6 +104,8 @@ async def sign_in(
             status="success",
             data=create_user_model,
         )
+    except HTTPException as http_exception:
+        raise http_exception
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Duplicate email or username")
@@ -137,7 +144,8 @@ async def refresh_token(
             table="none",
             data=TokenResponseScheme(access_token=new_access_token, refresh_token=new_refresh_token),
         )
-
+    except HTTPException as http_exception:
+        raise http_exception
     except JWTError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid token: {e}")
     except Exception as e:

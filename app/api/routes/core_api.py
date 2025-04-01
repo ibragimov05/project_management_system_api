@@ -38,12 +38,10 @@ def custom_swagger_ui(username: str = Depends(_verify_credentials)) -> HTMLRespo
 
 @router.get("/openapi.json", include_in_schema=False)
 def get_open_api_scheme(username: str = Depends(_verify_credentials)) -> JSONResponse:
-    # The actual FastAPI app will be accessible through the request
-    # We'll fix this in the route registration
     from fastapi import Request
 
     async def get_schema(request: Request):
-        app = request.app  # Get the FastAPI app from the request
+        app = request.app
         return JSONResponse(app.openapi())
 
     return get_schema
@@ -55,24 +53,29 @@ async def get_token(
     authservice: AUTHSERVICE_DEPENDENCY,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> TokenResponseScheme:
-    user: User | None = db.query(User).filter(User.username == form_data.username).first()
+    try:
+        user: User | None = db.query(User).filter(User.username == form_data.username).first()
 
-    # user not found
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        # user not found
+        if not user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
-    # password is incorrect
-    if not authservice.verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+        # password is incorrect
+        if not authservice.verify_password(form_data.password, user.hashed_password):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
 
-    # user's account is not active
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is inactive. Please contact support.",
-        )
+        # user's account is not active
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is inactive. Please contact support.",
+            )
 
-    access_token: str = authservice.create_token(user=user, refresh_token=False)
-    refresh_token: str = authservice.create_token(user=user, refresh_token=True)
+        access_token: str = authservice.create_token(user=user, refresh_token=False)
+        refresh_token: str = authservice.create_token(user=user, refresh_token=True)
 
-    return TokenResponseScheme(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+        return TokenResponseScheme(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+    except HTTPException as http_exception:
+        raise http_exception
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

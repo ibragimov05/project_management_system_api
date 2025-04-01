@@ -29,3 +29,6 @@ class User(Base):
     projects = relationship("Project", secondary="project_members", back_populates="members")
     tasks_assigned = relationship("Task", back_populates="assignee")
     comments = relationship("Comment", back_populates="author")
+
+    def __repr__(self):
+        return f"<User(id={self.id}, username={self.username})>"

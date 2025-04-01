@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, UTC
 
 from sqlalchemy import Column, DateTime, Integer, String, Text
 from sqlalchemy.orm import relationship
@@ -29,3 +29,6 @@ class Project(Base):
 
     def __str__(self):
         return f"{self.id} | {self.name}"
+
+    def __repr__(self):
+        return f"<Project(id={self.id}, name={self.name})>"

@@ -12,13 +12,13 @@ class Task(Base):
     __tablename__: str = "tasks"
 
     id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    assignee_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    assignee_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     status = Column(Enum(TaskStatus), default=TaskStatus.TODO, nullable=False)
     priority = Column(Enum(TaskPriority), default=TaskPriority.LOW, nullable=False)
-    due_to = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC).replace(tzinfo=None))
+    due_to = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
     updated_at = Column(
@@ -31,3 +31,6 @@ class Task(Base):
     project = relationship("Project", back_populates="tasks")
     assignee = relationship("User", back_populates="tasks_assigned")
     comments = relationship("Comment", back_populates="task")
+
+    def __repr__(self):
+        return f"<Task(id={self.id}, title={self.title}, status={self.status})>"

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, Field
 
 from app.core.enums.user_role_enum import UserRole
@@ -22,6 +24,8 @@ class UserResponseSchema(BaseModel):
     is_active: bool
     full_name: str
     role: UserRole
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
