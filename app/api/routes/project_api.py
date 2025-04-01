@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import joinedload
 
 from app.core.dependencies.database import DB_DEPENDENCY
+from app.core.dependencies.rate_limiter import RATE_LIMITER
 from app.core.enums.user_role_enum import UserRole
 from app.core.utils.abstract_response import BaseResponse
 from app.database.models.projects import Project
@@ -17,7 +18,12 @@ from .auth_api import oauth2_bearer
 router = APIRouter(prefix="/api/project", tags=["Project"])
 
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=BaseResponse[List[ProjectResponseScheme]])
+@router.get(
+    "/",
+    status_code=status.HTTP_200_OK,
+    response_model=BaseResponse[List[ProjectResponseScheme]],
+    dependencies=RATE_LIMITER,
+)
 def read_all_projects(
     db: DB_DEPENDENCY,
     authservice: AUTHSERVICE_DEPENDENCY,
@@ -53,7 +59,12 @@ def read_all_projects(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=BaseResponse[ProjectResponseScheme])
+@router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=BaseResponse[ProjectResponseScheme],
+    dependencies=RATE_LIMITER,
+)
 def create_project(
     db: DB_DEPENDENCY,
     authservice: AUTHSERVICE_DEPENDENCY,
@@ -92,7 +103,7 @@ def create_project(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.put("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.put("/{project_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=RATE_LIMITER)
 def update_project(
     project_id: int,
     db: DB_DEPENDENCY,
@@ -133,7 +144,7 @@ def update_project(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=RATE_LIMITER)
 def delete_project(
     project_id: int,
     db: DB_DEPENDENCY,

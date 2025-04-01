@@ -1,4 +1,5 @@
 from secrets import compare_digest
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -6,6 +7,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, OAuth2PasswordRequestForm
 
 from app.core.dependencies.database import DB_DEPENDENCY
+from app.core.dependencies.rate_limiter import RATE_LIMITER
 from app.core.utils.constants import ADMIN_PASSWORD, ADMIN_USERNAME
 from app.database.models.users import User
 from app.schemes.token_scheme import TokenResponseScheme
@@ -41,13 +43,13 @@ def get_open_api_scheme(username: str = Depends(_verify_credentials)) -> JSONRes
     from fastapi import Request
 
     async def get_schema(request: Request):
-        app = request.app
+        app: Any = request.app
         return JSONResponse(app.openapi())
 
     return get_schema
 
 
-@router.post("/token", response_model=TokenResponseScheme)
+@router.post("/token", response_model=TokenResponseScheme, dependencies=RATE_LIMITER)
 async def get_token(
     db: DB_DEPENDENCY,
     authservice: AUTHSERVICE_DEPENDENCY,

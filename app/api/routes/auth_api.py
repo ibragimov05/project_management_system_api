@@ -4,6 +4,7 @@ from jose import JWTError
 from sqlalchemy.exc import IntegrityError
 
 from app.core.dependencies.database import DB_DEPENDENCY
+from app.core.dependencies.rate_limiter import RATE_LIMITER
 from app.core.utils.abstract_response import BaseResponse
 from app.core.utils.helpers import Helpers
 from app.database.models.users import User
@@ -16,7 +17,7 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/token")
 
 
-@router.post("/login", status_code=status.HTTP_200_OK, response_model=BaseResponse[dict])
+@router.post("/login", status_code=status.HTTP_200_OK, response_model=BaseResponse[dict], dependencies=RATE_LIMITER)
 async def login(
     db: DB_DEPENDENCY,
     authservice: AUTHSERVICE_DEPENDENCY,
@@ -59,7 +60,12 @@ async def login(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.post("/sign_in", status_code=status.HTTP_201_CREATED, response_model=BaseResponse[UserResponseSchema])
+@router.post(
+    "/sign_in",
+    status_code=status.HTTP_201_CREATED,
+    response_model=BaseResponse[UserResponseSchema],
+    dependencies=RATE_LIMITER,
+)
 async def sign_in(
     db: DB_DEPENDENCY,
     create_user_request: CreateUserScheme,
@@ -114,7 +120,12 @@ async def sign_in(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.put("/refresh", status_code=status.HTTP_200_OK, response_model=BaseResponse[TokenResponseScheme])
+@router.put(
+    "/refresh",
+    status_code=status.HTTP_200_OK,
+    response_model=BaseResponse[TokenResponseScheme],
+    dependencies=RATE_LIMITER,
+)
 async def refresh_token(
     db: DB_DEPENDENCY,
     refresh_token: str,

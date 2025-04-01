@@ -1,4 +1,11 @@
-from fastapi import APIRouter, FastAPI
+from math import ceil
+from typing import NoReturn
+
+import redis.asyncio as redis
+
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response, status
+from fastapi.concurrency import asynccontextmanager
+from fastapi_limiter import FastAPILimiter
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_admin.contrib.sqla import Admin, ModelView
 
@@ -13,9 +20,6 @@ from app.database.models.project_members import ProjectMember
 from app.database.models.projects import Project
 from app.database.models.tasks import Task
 from app.database.models.users import User
-
-app = FastAPI(title=PROJECT_MANAGEMENT_SYSTEM_API, docs_url=None, redoc_url=None)
-
 
 # @app.middleware("http")
 # async def telegram_logger(request: Request, call_next) -> Any | Response:
@@ -34,6 +38,40 @@ app = FastAPI(title=PROJECT_MANAGEMENT_SYSTEM_API, docs_url=None, redoc_url=None
 #     telegram_bot_service.send_telegram_message(response_info)
 
 #     return response
+
+
+async def service_name_identifier(request: Request) -> str | None:
+    service: str | None = request.headers.get("Service-Name")
+
+    return service
+
+
+async def custom_callback(request: Request, response: Response, pexpire: int) -> NoReturn:
+    expire: int = ceil(pexpire / 1000)
+
+    raise HTTPException(
+        status.HTTP_429_TOO_MANY_REQUESTS,
+        f"Too Many Requests. Retry after {expire} seconds.",
+        headers={"Retry-After": str(expire)},
+    )
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    redis_connection = redis.from_url("redis://localhost:6379/0", encoding="utf8")
+
+    await FastAPILimiter.init(
+        redis=redis_connection,
+        identifier=service_name_identifier,
+        http_callback=custom_callback,
+    )
+
+    yield
+
+    await FastAPILimiter.close()
+
+
+app = FastAPI(title=PROJECT_MANAGEMENT_SYSTEM_API, docs_url=None, redoc_url=None, lifespan=lifespan)
 
 
 @app.get("/")
