@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import joinedload
 
 from app.core.dependencies.database import DB_DEPENDENCY
 from app.core.utils.abstract_response import BaseResponse
@@ -8,6 +9,7 @@ from app.database.models.projects import Project
 from app.database.models.users import User
 from app.schemes.project_scheme import ProjectResponseScheme
 from app.services.auth_service import AUTHSERVICE_DEPENDENCY, UserModel
+from app.services.logger_service import logger
 
 from .auth_api import oauth2_bearer
 
@@ -26,19 +28,18 @@ def read_all_projects(
         if isinstance(userdata, str):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=userdata)
 
-        users_all_projects = db.query(Project).filter(User.id == userdata.id).all()
-
-        users_all_projects_scheme = [
-            ProjectResponseScheme.model_validate(
-                {
-                    **project.__dict__,
-                    "members": [""],
-                    "tasks": [""],
-                    "comments": [""],
-                }
+        users_all_projects: List[Project] = (
+            db.query(Project)
+            .options(
+                joinedload(Project.comments),
+                joinedload(Project.members),
+                joinedload(Project.tasks),
             )
-            for project in users_all_projects
-        ]
+            .filter(User.id == userdata.id)
+            .all()
+        )
+
+        users_all_projects_scheme = [ProjectResponseScheme.model_validate(project) for project in users_all_projects]
 
         return BaseResponse(
             code=200,
@@ -48,4 +49,5 @@ def read_all_projects(
             data=users_all_projects_scheme,
         )
     except Exception as e:
+        logger.error(str(e))
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

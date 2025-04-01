@@ -24,3 +24,6 @@ class Project(Base):
     # relationships
     tasks = relationship("Task", back_populates="project")
     comments = relationship("Comment", back_populates="project")
+
+    def __str__(self):
+        return f"{self.id} | {self.name}"
