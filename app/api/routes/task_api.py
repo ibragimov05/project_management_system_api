@@ -1,14 +1,16 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 from app.core.dependencies.database import DB_DEPENDENCY
 from app.core.dependencies.rate_limiter import RATE_LIMITER
 from app.core.utils.abstract_response import BaseResponse
 from app.database.models.projects import Project
 from app.database.models.tasks import Task
+from app.database.models.users import User
 from app.schemes.task_scheme import CreateTaskScheme, TaskResponseScheme
 from app.services.auth_service import AUTHSERVICE_DEPENDENCY, UserModel
+from app.services.email_service import EmailService
 from app.services.logger_service import logger
 
 from .auth_api import oauth2_bearer
@@ -60,7 +62,7 @@ def read_all_tasks(
 
 @router.post(
     "/",
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_201_CREATED,
     response_model=BaseResponse[TaskResponseScheme],
     dependencies=RATE_LIMITER,
 )
@@ -68,6 +70,7 @@ def create_new_task(
     task_scheme: CreateTaskScheme,
     db: DB_DEPENDENCY,
     authservice: AUTHSERVICE_DEPENDENCY,
+    background_tasks: BackgroundTasks,
     token: str = Depends(oauth2_bearer),
 ) -> BaseResponse[TaskResponseScheme]:
     try:
@@ -79,8 +82,42 @@ def create_new_task(
         project: Project | None = db.query(Project).filter(Project.id == task_scheme.project_id).first()
 
         if project is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="project with the given id not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="project with the given id not found",
+            )
 
+        assignee_user: User | None = db.query(User).filter(User.id == task_scheme.assignee_id).first()
+
+        if assignee_user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="assignee user with the given id not found",
+            )
+
+        new_task = Task(
+            project_id=task_scheme.project_id,
+            title=task_scheme.title,
+            description=task_scheme.description,
+            assignee_id=task_scheme.assignee_id,
+            status=task_scheme.status,
+            priority=task_scheme.priority,
+            due_to=task_scheme.due_to,
+        )
+
+        db.add(new_task)
+        db.commit()
+        db.refresh(new_task)
+
+        background_tasks.add_task(EmailService().send_new_task_email, assignee_user.email, new_task)
+
+        return BaseResponse(
+            code=201,
+            message="New task created successfully",
+            status="success",
+            table="tasks",
+            data=TaskResponseScheme.model_validate(new_task),
+        )
     except HTTPException as http_exception:
         raise http_exception
     except Exception as e:
