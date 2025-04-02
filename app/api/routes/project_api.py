@@ -42,7 +42,9 @@ def read_all_projects(
             .all()
         )
 
-        users_all_projects_scheme = [ProjectResponseScheme.model_validate(project) for project in users_all_projects]
+        users_all_projects_scheme: List[ProjectResponseScheme] = [
+            ProjectResponseScheme.model_validate(project) for project in users_all_projects
+        ]
 
         return BaseResponse(
             code=200,
