@@ -12,7 +12,7 @@ class TelegramBotService:
 
     def send_telegram_message(self, text: str) -> None:
         payload: dict[str, str] = {"chat_id": self.telegram_group_id, "text": text}
-        
+
         try:
             response: requests.Response = requests.post(
                 f"https://api.telegram.org/bot{self.telegram_bot_token}/sendMessage",

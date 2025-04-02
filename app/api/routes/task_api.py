@@ -81,8 +81,6 @@ def create_new_task(
         if project is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="project with the given id not found")
 
-        
-
     except HTTPException as http_exception:
         raise http_exception
     except Exception as e:
