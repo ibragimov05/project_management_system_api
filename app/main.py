@@ -10,9 +10,10 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette_admin.contrib.sqla import Admin, ModelView
 
 from app.api.routes.auth_api import router as auth_router
+from app.api.routes.comment_api import router as comment_api
 from app.api.routes.core_api import router as core_router
 from app.api.routes.project_api import router as project_router
-from app.api.routes.project_member import router as project_member_api
+from app.api.routes.project_member_api import router as project_member_api
 from app.api.routes.task_api import router as task_router
 from app.core.utils.constants import PROJECT_MANAGEMENT_SYSTEM_API, SESSION_SECRET_KEY
 from app.core.utils.starlette_auth_provider import StarletteAuthProvider
@@ -90,7 +91,14 @@ Base.metadata.create_all(bind=engine)
 
 
 def _init_routes() -> None:
-    all_routes: list[APIRouter] = [core_router, auth_router, project_router, project_member_api, task_router]
+    all_routes: list[APIRouter] = [
+        core_router,
+        auth_router,
+        project_router,
+        project_member_api,
+        task_router,
+        comment_api,
+    ]
 
     for route in all_routes:
         app.include_router(route)

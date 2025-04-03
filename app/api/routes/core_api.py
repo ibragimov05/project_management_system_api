@@ -35,7 +35,7 @@ def _verify_credentials(credentials: HTTPBasicCredentials = Depends(SECURITY)) -
 
 @router.get("/docs", include_in_schema=False)
 def custom_swagger_ui(username: str = Depends(_verify_credentials)) -> HTMLResponse:
-    return get_swagger_ui_html(openapi_url="/openapi.json", title="Secure Swagger Ui")
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="Secure Swagger UI")
 
 
 @router.get("/openapi.json", include_in_schema=False)
