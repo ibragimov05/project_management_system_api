@@ -5,13 +5,10 @@ from pydantic import BaseModel, Field
 
 class CommentBaseScheme(BaseModel):
     content: str = Field(min_length=4)
-    author_id: int
-    project_id: int
-    task_id: int
 
 
 class CreateCommentScheme(CommentBaseScheme):
-    pass
+    task_id: int
 
 
 class UpdateCommentScheme(CommentBaseScheme):
@@ -20,7 +17,8 @@ class UpdateCommentScheme(CommentBaseScheme):
 
 class CommentResponseScheme(CommentBaseScheme):
     id: int
-
+    author_id: int
+    project_id: int
     created_at: datetime
     updated_at: datetime
 
